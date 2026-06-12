@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Novel OS — Your Writing Workspace</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --amber: #BA7517;
+      --amber-light: #FAEEDA;
+      --amber-mid: #FAC775;
+      --amber-deep: #633806;
+      --forest: #3B6D11;
+      --forest-light: #EAF3DE;
+      --forest-mid: #97C459;
+      --forest-deep: #173404;
+      --purple-light: #EEEDFE;
+      --purple-deep: #3C3489;
+      --pink-light: #FBEAF0;
+      --pink-deep: #72243E;
+      --cream: #F8F4EC;
+      --ink: #2C2C2A;
+      --ink-2: #5F5E5A;
+      --ink-3: #888780;
+      --card: #FFFFFF;
+      --border: rgba(44,44,42,0.12);
+    }
+
+    html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--cream); color: var(--ink); }
+
+    /* ── TOP BAR ─────────────────────────────── */
+    .topbar {
+      position: sticky; top: 0; z-index: 100;
+      background: var(--ink); display: flex; align-items: center;
+      padding: 0 1.5rem; height: 56px; border-bottom: 2px solid var(--amber);
+      gap: 0;
+    }
+    .logo { display: flex; align-items: center; gap: 10px; margin-right: 2rem; text-decoration: none; }
+    .logo-icon { width: 32px; height: 32px; background: var(--amber); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+    .logo-icon i { color: #fff; font-size: 17px; }
+    .logo-text { font-size: 17px; font-weight: 600; color: #fff; letter-spacing: -0.3px; }
+    .nav-tabs { display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+    .nav-tabs::-webkit-scrollbar { display: none; }
+    .tab {
+      display: flex; align-items: center; gap: 7px; padding: 6px 14px;
+      border-radius: 6px; font-size: 13px; font-weight: 400; color: rgba(255,255,255,0.55);
+      cursor: pointer; white-space: nowrap; border: none; background: none;
+      transition: color .15s, background .15s;
+    }
+    .tab:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.06); }
+    .tab.active { color: #fff; background: rgba(186,117,23,.28); font-weight: 500; }
+    .tab i { font-size: 15px; }
+    .status-bar {
+      display: flex; align-items: center; gap: 6px; font-size: 12px; color: rgba(255,255,255,.4);
+      margin-left: auto; padding-left: 1rem; border-left: 1px solid rgba(255,255,255,.1); white-space: nowrap;
+    }
+    .status-dot { width: 7px; height: 7px; border-radius: 50%; background: #639922; }
+
+    /* ── API KEY BANNER ──────────────────────── */
+    #api-banner {
+      background: var(--amber-light); border-bottom: 1px solid var(--amber-mid);
+      padding: 10px 1.5rem; display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--amber-deep);
+    }
+    #api-banner.hidden { display: none; }
+    #api-banner input {
+      flex: 1; max-width: 340px; background: #fff; border: 1px solid var(--amber-mid);
+      border-radius: 6px; padding: 6px 10px; font-size: 13px; color: var(--ink); outline: none;
+    }
+    #api-banner input:focus { border-color: var(--amber); }
+    #api-banner button { background: var(--amber); color: #fff; border: none; border-radius: 6px; padding: 6px 14px; font-size: 13px; font-weight: 500; cursor: pointer; }
+    #api-banner button:hover { background: var(--amber-deep); }
+
+    /* ── PAGES ───────────────────────────────── */
+    .page { display: none; padding: 2rem 2rem 3rem; max-width: 1100px; margin: 0 auto; }
+    .page.active { display: block; }
+
+    .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 2rem; }
+    .page-header h2 { font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: -0.4px; }
+    .page-header p { font-size: 13px; color: var(--ink-2); margin-top: 3px; }
+
+    /* ── BUTTONS ─────────────────────────────── */
+    .btn-primary {
+      background: var(--amber); color: #fff; border: none; padding: 8px 16px;
+      border-radius: 6px; font-size: 13px; font-weight: 500; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: background .15s;
+    }
+    .btn-primary:hover { background: var(--amber-deep); }
+    .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+    .btn-ghost {
+      background: none; border: 1px solid var(--border); color: var(--ink-2);
+      padding: 7px 14px; border-radius: 6px; font-size: 13px; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px; transition: background .15s;
+    }
+    .btn-ghost:hover { background: rgba(44,44,42,.05); }
+    .btn-icon {
+      background: none; border: 1px solid var(--border); color: var(--ink-3);
+      padding: 5px 8px; border-radius: 5px; cursor: pointer; font-size: 13px;
+      display: inline-flex; align-items: center; transition: all .15s;
+    }
+    .btn-icon:hover { background: var(--amber-light); color: var(--amber-deep); border-color: var(--amber-mid); }
+    .btn-danger {
+      background: none; border: none; color: #A32D2D; padding: 5px 8px;
+      border-radius: 5px; cursor: pointer; font-size: 13px;
+      display: inline-flex; align-items: center; transition: background .15s;
+    }
+    .btn-danger:hover { background: #FCEBEB; }
+
+    /* ── DASHBOARD ───────────────────────────── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+    .stat-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.25rem; position: relative; overflow: hidden;
+    }
+    .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+    .stat-card.s1::before { background: var(--amber); }
+    .stat-card.s2::before { background: var(--forest-mid); }
+    .stat-card.s3::before { background: #7F77DD; }
+    .stat-card.s4::before { background: #D4537E; }
+    .stat-label { font-size: 11px; color: var(--ink-3); font-weight: 500; margin-bottom: 6px; letter-spacing: .5px; text-transform: uppercase; }
+    .stat-val { font-size: 28px; font-weight: 600; color: var(--ink); letter-spacing: -1px; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .card h3 { font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+    .card h3 i { color: var(--amber); font-size: 17px; }
+    .pill { display: inline-flex; align-items: center; gap: 5px; background: var(--amber-light); color: var(--amber-deep); font-size: 11px; font-weight: 500; padding: 3px 8px; border-radius: 20px; }
+    .pill.green { background: var(--forest-light); color: var(--forest-deep); }
+    .quick-item {
+      display: flex; align-items: center; gap: 12px; padding: 10px; background: var(--cream);
+      border-radius: 8px; cursor: pointer; transition: background .15s; border: none; width: 100%; text-align: left;
+    }
+    .quick-item:hover { background: var(--amber-light); }
+    .quick-icon { width: 32px; height: 32px; border-radius: 7px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    /* ── FORMS ───────────────────────────────── */
+    .form-card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; }
+    .form-card h3 { font-size: 15px; font-weight: 600; margin-bottom: 1.25rem; color: var(--ink); }
+    .field-grid { display: grid; gap: 10px; }
+    .field-grid.c2 { grid-template-columns: 1fr 1fr; }
+    .field-grid.c3 { grid-template-columns: 1fr 1fr 1fr; }
+    .field-grid .span2 { grid-column: span 2; }
+    .field-grid .span3 { grid-column: span 3; }
+    input[type="text"], input[type="password"], textarea, select {
+      width: 100%; background: var(--cream); border: 1px solid var(--border);
+      border-radius: 7px; padding: 9px 12px; font-size: 13px; color: var(--ink);
+      font-family: inherit; outline: none; transition: border-color .15s; resize: none;
+    }
+    input[type="text"]:focus, input[type="password"]:focus, textarea:focus { border-color: var(--amber); box-shadow: 0 0 0 3px rgba(186,117,23,.1); }
+    textarea { height: 80px; }
+    .form-actions { display: flex; gap: 8px; margin-top: 1rem; }
+    label.field-label { font-size: 12px; font-weight: 500; color: var(--ink-2); display: block; margin-bottom: 4px; }
+
+    /* ── ITEM CARDS ──────────────────────────── */
+    .items-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .item-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.25rem; transition: border-color .15s, box-shadow .15s;
+    }
+    .item-card:hover { border-color: var(--amber-mid); box-shadow: 0 2px 12px rgba(186,117,23,.08); }
+    .item-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .item-name { font-size: 16px; font-weight: 600; color: var(--ink); }
+    .item-meta { font-size: 12px; color: var(--ink-3); margin-top: 2px; }
+    .item-desc { font-size: 13px; color: var(--ink-2); line-height: 1.6; margin-bottom: 10px; }
+    .item-tag { font-size: 11px; background: var(--amber-light); color: var(--amber-deep); border-radius: 4px; padding: 3px 8px; display: inline-block; }
+    .item-tag.secret { background: var(--pink-light); color: var(--pink-deep); }
+    .item-tag.forest { background: var(--forest-light); color: var(--forest-deep); }
+    .item-actions { display: flex; gap: 4px; }
+
+    /* ── CHAPTER LIST ────────────────────────── */
+    .chapter-list { display: flex; flex-direction: column; gap: 10px; }
+    .chapter-item {
+      background: var(--card); border: 1px solid var(--border); border-radius: 10px;
+      padding: 1rem 1.25rem; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    }
+    .ch-badge { background: var(--amber-light); color: var(--amber-deep); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 5px; white-space: nowrap; }
+    .ch-vol { background: var(--forest-light); color: var(--forest-deep); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 5px; white-space: nowrap; }
+    .ch-pov { background: var(--purple-light); color: var(--purple-deep); font-size: 11px; padding: 4px 10px; border-radius: 5px; white-space: nowrap; }
+    .ch-summary { font-size: 13px; color: var(--ink-2); flex: 1; min-width: 120px; }
+
+    /* ── WORLD BIBLE ─────────────────────────── */
+    #bible-text { height: 420px; background: var(--card); font-size: 14px; line-height: 1.8; }
+    .word-count { font-size: 12px; color: var(--ink-3); }
+
+    /* ── CHARACTER CHAT ──────────────────────── */
+    .chat-wrap { display: flex; flex-direction: column; gap: 1rem; }
+    .prompt-setup { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; display: flex; flex-direction: column; gap: 12px; }
+    #chat-prompt { height: 90px; }
+    .chat-messages {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.25rem; min-height: 320px; max-height: 420px; overflow-y: auto;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .msg { display: flex; gap: 10px; max-width: 80%; }
+    .msg.user { margin-left: auto; flex-direction: row-reverse; }
+    .msg-avatar { width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+    .msg-avatar.ai { background: var(--amber-light); color: var(--amber-deep); }
+    .msg-avatar.user { background: var(--forest-light); color: var(--forest-deep); }
+    .msg-bubble { padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.6; }
+    .msg.ai .msg-bubble { background: var(--cream); border: 1px solid var(--border); color: var(--ink); }
+    .msg.user .msg-bubble { background: var(--amber); color: #fff; }
+    .chat-input-row { display: flex; gap: 8px; }
+    .chat-input-row input { flex: 1; }
+
+    /* ── CONSISTENCY ─────────────────────────── */
+    #check-text { height: 160px; }
+    .result-box { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; min-height: 200px; }
+    .result-box pre { font-family: inherit; font-size: 13px; line-height: 1.8; color: var(--ink-2); white-space: pre-wrap; }
+    .no-issues { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 160px; gap: 8px; }
+    .no-issues i { font-size: 36px; color: var(--amber-mid); }
+    .no-issues p { color: var(--ink-3); font-size: 13px; }
+
+    /* ── EXPORT ──────────────────────────────── */
+    .export-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+    .export-card {
+      background: var(--card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.5rem; text-align: center; transition: border-color .15s, box-shadow .15s;
+    }
+    .export-card:hover { border-color: var(--amber-mid); box-shadow: 0 2px 12px rgba(186,117,23,.08); }
+    .export-card > i { font-size: 36px; color: var(--amber); margin-bottom: .75rem; display: block; }
+    .export-card h4 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .export-card p { font-size: 12px; color: var(--ink-3); line-height: 1.6; margin-bottom: 1rem; }
+
+    /* ── EMPTY STATE ─────────────────────────── */
+    .empty-state { text-align: center; padding: 3rem 1rem; color: var(--ink-3); }
+    .empty-state i { font-size: 42px; color: var(--amber-mid); margin-bottom: .75rem; display: block; }
+    .empty-state p { font-size: 14px; }
+
+    /* ── LOADING ─────────────────────────────── */
+    .loading-row { display: flex; align-items: center; gap: 8px; color: var(--ink-3); font-size: 13px; padding: .75rem 0; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spin { animation: spin .7s linear infinite; display: inline-block; }
+
+    /* ── TYPING DOTS ─────────────────────────── */
+    .typing-dots { display: flex; gap: 4px; align-items: center; padding: 10px 14px; background: var(--cream); border: 1px solid var(--border); border-radius: 10px; width: fit-content; }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--amber-mid); animation: bounce .8s infinite; }
+    .dot:nth-child(2) { animation-delay: .15s; }
+    .dot:nth-child(3) { animation-delay: .3s; }
+    @keyframes bounce { 0%,80%,100% { transform: translateY(0); } 40% { transform: translateY(-5px); } }
+
+    /* ── RESPONSIVE ──────────────────────────── */
+    @media (max-width: 768px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .two-col { grid-template-columns: 1fr; }
+      .items-grid { grid-template-columns: 1fr; }
+      .export-grid { grid-template-columns: 1fr; }
+      .field-grid.c2, .field-grid.c3 { grid-template-columns: 1fr; }
+      .field-grid .span2, .field-grid .span3 { grid-column: span 1; }
+      .chapter-item { flex-direction: column; align-items: flex-start; }
+      .page { padding: 1.25rem 1rem 2rem; }
+      .logo-text { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .tab span { display: none; }
+      .tab { padding: 6px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon"><i class="ti ti-book"></i></div>
+    <span class="logo-text">Novel OS</span>
+  </div>
+  <nav class="nav-tabs" role="tablist" aria-label="Main navigation">
+    <button class="tab active" onclick="switchTab('dashboard')" role="tab" aria-selected="true"><i class="ti ti-layout-dashboard"></i><span> Dashboard</span></button>
+    <button class="tab" onclick="switchTab('chapters')" role="tab"><i class="ti ti-list-numbers"></i><span> Chapters</span></button>
+    <button class="tab" onclick="switchTab('characters')" role="tab"><i class="ti ti-users"></i><span> Characters</span></button>
+    <button class="tab" onclick="switchTab('locations')" role="tab"><i class="ti ti-map-pin"></i><span> Locations</span></button>
+    <button class="tab" onclick="switchTab('orgs')" role="tab"><i class="ti ti-building"></i><span> Orgs</span></button>
+    <button class="tab" onclick="switchTab('bible')" role="tab"><i class="ti ti-notebook"></i><span> World Bible</span></button>
+    <button class="tab" onclick="switchTab('chat')" role="tab"><i class="ti ti-message-circle"></i><span> AI Chat</span></button>
+    <button class="tab" onclick="switchTab('consistency')" role="tab"><i class="ti ti-brain"></i><span> Consistency</span></button>
+    <button class="tab" onclick="switchTab('export')" role="tab"><i class="ti ti-package-export"></i><span> Export</span></button>
+  </nav>
+  <div class="status-bar"><div class="status-dot"></div> Local · Stable</div>
+</header>
+
+<!-- API KEY BANNER -->
+<div id="api-banner">
+  <i class="ti ti-key"></i>
+  <span>Enter your Anthropic API key to enable AI features (Character Chat &amp; Consistency Engine):</span>
+  <input type="password" id="api-key-input" placeholder="sk-ant-..." autocomplete="off" />
+  <button onclick="saveApiKey()">Save key</button>
+  <button onclick="document.getElementById('api-banner').classList.add('hidden')" style="background:none;border:1px solid var(--amber);color:var(--amber-deep);">Dismiss</button>
+</div>
+
+<!-- ─────────────── DASHBOARD ─────────────── -->
+<main>
+<section id="page-dashboard" class="page active">
+  <div class="page-header">
+    <div><h2>Dashboard</h2><p>Your novel at a glance</p></div>
+  </div>
+  <div class="stats-grid">
+    <div class="stat-card s1"><div class="stat-label">Chapters</div><div class="stat-val" id="stat-ch">0</div></div>
+    <div class="stat-card s2"><div class="stat-label">Characters</div><div class="stat-val" id="stat-chars">0</div></div>
+    <div class="stat-card s3"><div class="stat-label">Locations</div><div class="stat-val" id="stat-locs">0</div></div>
+    <div class="stat-card s4"><div class="stat-label">Est. Words</div><div class="stat-val" id="stat-words">0</div></div>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <h3><i class="ti ti-brain"></i> AI Co-Pilot</h3>
+      <p style="font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:12px">Use <strong>Character Chat</strong> to step into your characters' minds. Interview them to discover their voice before writing a single scene.</p>
+      <p style="font-size:13px;color:var(--ink-2);line-height:1.7;margin-bottom:14px">The <strong>Consistency Engine</strong> cross-references your draft against your world data to catch plot holes and continuity errors automatically.</p>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        <span class="pill"><i class="ti ti-sparkles" style="font-size:11px"></i> Claude-powered</span>
+        <span class="pill green"><i class="ti ti-database" style="font-size:11px"></i> Local storage</span>
+      </div>
+    </div>
+    <div class="card">
+      <h3><i class="ti ti-rocket"></i> Quick start</h3>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button class="quick-item" onclick="switchTab('characters')">
+          <div class="quick-icon" style="background:var(--amber-light)"><i class="ti ti-user-plus" style="color:var(--amber-deep);font-size:16px"></i></div>
+          <div><div style="font-size:13px;font-weight:600">Add your first character</div><div style="font-size:12px;color:var(--ink-3)">Name, age, goals, and secrets</div></div>
+          <i class="ti ti-chevron-right" style="margin-left:auto;color:var(--ink-3)"></i>
+        </button>
+        <button class="quick-item" onclick="switchTab('chapters')">
+          <div class="quick-icon" style="background:var(--forest-light)"><i class="ti ti-list-check" style="color:var(--forest-deep);font-size:16px"></i></div>
+          <div><div style="font-size:13px;font-weight:600">Plan your first chapter</div><div style="font-size:12px;color:var(--ink-3)">Volume, POV, and summary</div></div>
+          <i class="ti ti-chevron-right" style="margin-left:auto;color:var(--ink-3)"></i>
+        </button>
+        <button class="quick-item" onclick="switchTab('chat')">
+          <div class="quick-icon" style="background:var(--purple-light)"><i class="ti ti-message-circle" style="color:var(--purple-deep);font-size:16px"></i></div>
+          <div><div style="font-size:13px;font-weight:600">Interview a character with AI</div><div style="font-size:12px;color:var(--ink-3)">Discover their voice naturally</div></div>
+          <i class="ti ti-chevron-right" style="margin-left:auto;color:var(--ink-3)"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── CHARACTERS ─────────────── -->
+<section id="page-characters" class="page">
+  <div class="page-header">
+    <div><h2>Characters</h2><p>Build the people of your world</p></div>
+    <button class="btn-primary" onclick="toggleForm('char-form-wrap')"><i class="ti ti-plus"></i> New character</button>
+  </div>
+  <div id="char-form-wrap" style="display:none">
+    <div class="form-card">
+      <h3 id="char-form-title">New character</h3>
+      <div class="field-grid c2">
+        <div><label class="field-label">Full name *</label><input type="text" id="char-name" placeholder="e.g. Mira Vaslen"></div>
+        <div><label class="field-label">Age / Era</label><input type="text" id="char-age" placeholder="e.g. 34 or Third Age"></div>
+        <div class="span2"><label class="field-label">Description</label><textarea id="char-desc" placeholder="Appearance, personality, role in the story…"></textarea></div>
+        <div><label class="field-label">Goals & motivations</label><textarea id="char-goals" placeholder="What do they want most?"></textarea></div>
+        <div><label class="field-label">Secrets & hidden traits</label><textarea id="char-secrets" placeholder="What are they hiding?"></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="saveChar()"><i class="ti ti-check"></i> Save character</button>
+        <button class="btn-ghost" onclick="cancelForm('char-form-wrap', clearCharForm)">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="char-list" class="items-grid"></div>
+</section>
+
+<!-- ─────────────── LOCATIONS ─────────────── -->
+<section id="page-locations" class="page">
+  <div class="page-header">
+    <div><h2>Locations</h2><p>Map out your world's geography</p></div>
+    <button class="btn-primary" onclick="toggleForm('loc-form-wrap')"><i class="ti ti-plus"></i> New location</button>
+  </div>
+  <div id="loc-form-wrap" style="display:none">
+    <div class="form-card">
+      <h3>New location</h3>
+      <div class="field-grid">
+        <div><label class="field-label">Location name *</label><input type="text" id="loc-name" placeholder="e.g. The Ashwood Forest"></div>
+        <div><label class="field-label">Description</label><textarea id="loc-desc" placeholder="Atmosphere, geography, what the place feels like…"></textarea></div>
+        <div><label class="field-label">Narrative importance</label><input type="text" id="loc-imp" placeholder="e.g. Where the hero first discovers her power"></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="saveLoc()"><i class="ti ti-check"></i> Save location</button>
+        <button class="btn-ghost" onclick="cancelForm('loc-form-wrap', clearLocForm)">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="loc-list" class="items-grid"></div>
+</section>
+
+<!-- ─────────────── ORGANIZATIONS ─────────────── -->
+<section id="page-orgs" class="page">
+  <div class="page-header">
+    <div><h2>Organizations</h2><p>Factions, guilds, and power structures</p></div>
+    <button class="btn-primary" onclick="toggleForm('org-form-wrap')"><i class="ti ti-plus"></i> New organization</button>
+  </div>
+  <div id="org-form-wrap" style="display:none">
+    <div class="form-card">
+      <h3>New organization</h3>
+      <div class="field-grid c2">
+        <div class="span2"><label class="field-label">Organization name *</label><input type="text" id="org-name" placeholder="e.g. The Ember Council"></div>
+        <div><label class="field-label">Purpose & ideology</label><textarea id="org-purpose" placeholder="What do they stand for?"></textarea></div>
+        <div><label class="field-label">Key members</label><textarea id="org-members" placeholder="List notable members…"></textarea></div>
+        <div class="span2"><label class="field-label">History & founding</label><textarea id="org-history" placeholder="How and when were they formed?"></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="saveOrg()"><i class="ti ti-check"></i> Save organization</button>
+        <button class="btn-ghost" onclick="cancelForm('org-form-wrap', clearOrgForm)">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="org-list" class="items-grid"></div>
+</section>
+
+<!-- ─────────────── CHAPTER PLANNER ─────────────── -->
+<section id="page-chapters" class="page">
+  <div class="page-header">
+    <div><h2>Chapter Planner</h2><p>Structure your story arc by arc</p></div>
+    <button class="btn-primary" onclick="toggleForm('chap-form-wrap')"><i class="ti ti-plus"></i> Plan chapter</button>
+  </div>
+  <div id="chap-form-wrap" style="display:none">
+    <div class="form-card">
+      <h3 id="chap-form-title">Plan new chapter</h3>
+      <div class="field-grid c3">
+        <div><label class="field-label">Volume *</label><input type="text" id="chap-vol" placeholder="e.g. Vol 1"></div>
+        <div><label class="field-label">Chapter *</label><input type="text" id="chap-ch" placeholder="e.g. Ch 5"></div>
+        <div><label class="field-label">POV character</label><input type="text" id="chap-pov" placeholder="e.g. Mira"></div>
+        <div><label class="field-label">Scene goals</label><textarea id="chap-goals" style="height:64px" placeholder="What must happen in this chapter?"></textarea></div>
+        <div class="span2"><label class="field-label">Chapter summary</label><textarea id="chap-summary" style="height:64px" placeholder="Brief outline of events…"></textarea></div>
+      </div>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="saveChap()"><i class="ti ti-check"></i> Save chapter</button>
+        <button class="btn-ghost" onclick="cancelForm('chap-form-wrap', clearChapForm)">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <div id="chap-list" class="chapter-list"></div>
+</section>
+
+<!-- ─────────────── WORLD BIBLE ─────────────── -->
+<section id="page-bible" class="page">
+  <div class="page-header">
+    <div><h2>World Bible</h2><p>Free-form lore, rules, and canon</p></div>
+    <div id="bible-word-count" class="word-count">0 words</div>
+  </div>
+  <textarea id="bible-text" placeholder="Write your world's rules, history, magic systems, cosmology — anything that underpins your story. This content feeds the Consistency Engine." oninput="saveBible()"></textarea>
+</section>
+
+<!-- ─────────────── CHARACTER CHAT ─────────────── -->
+<section id="page-chat" class="page">
+  <div class="page-header">
+    <div><h2>Character Chat</h2><p>Step into your character's perspective with AI</p></div>
+  </div>
+  <div class="chat-wrap">
+    <div id="chat-setup" class="prompt-setup">
+      <div>
+        <label class="field-label">Character persona prompt</label>
+        <textarea id="chat-prompt" placeholder="e.g. Act as Mira, a jaded cartographer who speaks in short, precise sentences. She distrusts strangers but opens up when maps are involved."></textarea>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-primary" onclick="startChat()"><i class="ti ti-player-play"></i> Begin session</button>
+        <button class="btn-ghost" id="end-session-btn" style="display:none" onclick="endChat()"><i class="ti ti-square"></i> End session</button>
+      </div>
+    </div>
+    <div id="chat-messages" class="chat-messages" style="display:none"></div>
+    <div id="chat-input-row" class="chat-input-row" style="display:none">
+      <input type="text" id="chat-input" placeholder="Type your message…" onkeydown="if(event.key==='Enter' && !event.shiftKey){ event.preventDefault(); sendChatMsg(); }">
+      <button class="btn-primary" onclick="sendChatMsg()"><i class="ti ti-send"></i></button>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── CONSISTENCY ENGINE ─────────────── -->
+<section id="page-consistency" class="page">
+  <div class="page-header">
+    <div><h2>Consistency Engine</h2><p>Catch plot holes before your readers do</p></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:1rem">
+    <div class="form-card">
+      <h3>Chapter draft</h3>
+      <textarea id="check-text" placeholder="Paste a chapter draft here. The engine cross-references it against your characters, locations, and organizations to flag inconsistencies."></textarea>
+      <div class="form-actions">
+        <button class="btn-primary" onclick="runCheck()" id="run-check-btn"><i class="ti ti-brain"></i> Analyze draft</button>
+      </div>
+    </div>
+    <div class="result-box" id="check-result">
+      <div class="no-issues"><i class="ti ti-file-search"></i><p>Paste a chapter draft above to begin analysis</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ─────────────── EXPORT ─────────────── -->
+<section id="page-export" class="page">
+  <div class="page-header">
+    <div><h2>Export Data</h2><p>Take your work anywhere</p></div>
+  </div>
+  <div class="export-grid">
+    <div class="export-card">
+      <i class="ti ti-file-type-json"></i>
+      <h4>Full project JSON</h4>
+      <p>All characters, locations, organizations, chapters, and world bible in one portable file.</p>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="exportJSON()"><i class="ti ti-download"></i> Download JSON</button>
+    </div>
+    <div class="export-card">
+      <i class="ti ti-markdown"></i>
+      <h4>Characters markdown</h4>
+      <p>Each character as a structured markdown document, ready for Notion or Obsidian.</p>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="exportMD()"><i class="ti ti-download"></i> Download .md</button>
+    </div>
+    <div class="export-card">
+      <i class="ti ti-table"></i>
+      <h4>Chapter outline CSV</h4>
+      <p>Volume, chapter, POV, goals, and summary in a spreadsheet-ready format.</p>
+      <button class="btn-primary" style="width:100%;justify-content:center" onclick="exportCSV()"><i class="ti ti-download"></i> Download CSV</button>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+  /* ─── STORE ──────────────────────────────────── */
+  const STORE_KEY = 'novelos-v2';
+  const API_KEY_STORE = 'novelos-apikey';
+  let store = JSON.parse(localStorage.getItem(STORE_KEY) || '{"characters":[],"locations":[],"organizations":[],"chapters":[],"bible":""}');
+  let editingChar = null, editingLoc = null, editingOrg = null, editingChap = null;
+  let chatHistory = [];
+
+  function save() { localStorage.setItem(STORE_KEY, JSON.stringify(store)); updateStats(); }
+
+  /* ─── API KEY ────────────────────────────────── */
+  function saveApiKey() {
+    const k = document.getElementById('api-key-input').value.trim();
+    if (!k) return;
+    localStorage.setItem(API_KEY_STORE, k);
+    document.getElementById('api-banner').classList.add('hidden');
+  }
+  function getApiKey() { return localStorage.getItem(API_KEY_STORE) || ''; }
+
+  // Show banner only if no key saved
+  window.addEventListener('DOMContentLoaded', () => {
+    if (getApiKey()) document.getElementById('api-banner').classList.add('hidden');
+    renderAll();
+    updateStats();
+    document.getElementById('bible-text').value = store.bible || '';
+    updateBibleCount();
+  });
+
+  /* ─── NAVIGATION ─────────────────────────────── */
+  const TAB_IDS = ['dashboard','chapters','characters','locations','orgs','bible','chat','consistency','export'];
+  function switchTab(id) {
+    document.querySelectorAll('.tab').forEach((t, i) => {
+      t.classList.toggle('active', TAB_IDS[i] === id);
+      t.setAttribute('aria-selected', TAB_IDS[i] === id);
+    });
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    if (id === 'bible') { document.getElementById('bible-text').value = store.bible || ''; updateBibleCount(); }
+    updateStats();
+  }
+
+  /* ─── STATS ──────────────────────────────────── */
+  function updateStats() {
+    document.getElementById('stat-ch').textContent = store.chapters.length;
+    document.getElementById('stat-chars').textContent = store.characters.length;
+    document.getElementById('stat-locs').textContent = store.locations.length;
+    let words = store.bible ? store.bible.split(/\s+/).filter(Boolean).length : 0;
+    store.chapters.forEach(c => { if (c.summary) words += c.summary.split(/\s+/).filter(Boolean).length; });
+    document.getElementById('stat-words').textContent = words.toLocaleString();
+  }
+
+  /* ─── FORM HELPERS ───────────────────────────── */
+  function toggleForm(id) {
+    const w = document.getElementById(id);
+    w.style.display = w.style.display === 'none' ? 'block' : 'none';
+    if (w.style.display === 'block') w.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function cancelForm(wrapperId, clearFn) { clearFn(); document.getElementById(wrapperId).style.display = 'none'; }
+  function val(id) { return document.getElementById(id).value.trim(); }
+  function setVal(id, v) { document.getElementById(id).value = v || ''; }
+
+  /* ─── CHARACTERS ─────────────────────────────── */
+  function clearCharForm() {
+    editingChar = null;
+    ['char-name','char-age','char-desc','char-goals','char-secrets'].forEach(id => setVal(id, ''));
+    document.getElementById('char-form-title').textContent = 'New character';
+  }
+  function saveChar() {
+    const n = val('char-name'); if (!n) return alert('Name is required.');
+    const obj = { id: editingChar || Date.now() + '', name: n, age: val('char-age'), description: val('char-desc'), goals: val('char-goals'), secrets: val('char-secrets') };
+    if (editingChar) store.characters = store.characters.map(c => c.id === editingChar ? obj : c);
+    else store.characters.push(obj);
+    save(); clearCharForm(); document.getElementById('char-form-wrap').style.display = 'none'; renderChars();
+  }
+  function editChar(id) {
+    const c = store.characters.find(x => x.id === id); if (!c) return;
+    editingChar = id;
+    setVal('char-name', c.name); setVal('char-age', c.age); setVal('char-desc', c.description); setVal('char-goals', c.goals); setVal('char-secrets', c.secrets);
+    document.getElementById('char-form-title').textContent = 'Edit character';
+    document.getElementById('char-form-wrap').style.display = 'block';
+    document.getElementById('char-form-wrap').scrollIntoView({ behavior: 'smooth' });
+  }
+  function deleteChar(id) { if (!confirm('Delete this character?')) return; store.characters = store.characters.filter(x => x.id !== id); save(); renderChars(); }
+  function renderChars() {
+    const el = document.getElementById('char-list');
+    if (!store.characters.length) { el.innerHTML = '<div class="empty-state" style="grid-column:span 2"><i class="ti ti-users"></i><p>No characters yet — click "New character" above</p></div>'; return; }
+    el.innerHTML = store.characters.map(c => `
+      <div class="item-card">
+        <div class="item-header">
+          <div><div class="item-name">${esc(c.name)}</div>${c.age ? `<div class="item-meta">Age: ${esc(c.age)}</div>` : ''}</div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick="editChar('${c.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+            <button class="btn-danger" onclick="deleteChar('${c.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <p class="item-desc">${c.description ? esc(c.description) : '<em style="color:var(--ink-3)">No description</em>'}</p>
+        ${c.goals ? `<span class="item-tag forest" style="margin-right:4px;margin-bottom:4px"><i class="ti ti-target" style="font-size:10px;vertical-align:-1px"></i> ${esc(c.goals.slice(0,70))}${c.goals.length>70?'…':''}</span>` : ''}
+        ${c.secrets ? `<span class="item-tag secret" style="display:inline-block"><i class="ti ti-eye-off" style="font-size:10px;vertical-align:-1px"></i> ${esc(c.secrets.slice(0,70))}${c.secrets.length>70?'…':''}</span>` : ''}
+      </div>`).join('');
+  }
+
+  /* ─── LOCATIONS ──────────────────────────────── */
+  function clearLocForm() { editingLoc = null; ['loc-name','loc-desc','loc-imp'].forEach(id => setVal(id, '')); }
+  function saveLoc() {
+    const n = val('loc-name'); if (!n) return alert('Name is required.');
+    const obj = { id: editingLoc || Date.now() + '', name: n, description: val('loc-desc'), importance: val('loc-imp') };
+    if (editingLoc) store.locations = store.locations.map(l => l.id === editingLoc ? obj : l);
+    else store.locations.push(obj);
+    save(); clearLocForm(); document.getElementById('loc-form-wrap').style.display = 'none'; renderLocs();
+  }
+  function editLoc(id) {
+    const l = store.locations.find(x => x.id === id); if (!l) return;
+    editingLoc = id; setVal('loc-name', l.name); setVal('loc-desc', l.description); setVal('loc-imp', l.importance);
+    document.getElementById('loc-form-wrap').style.display = 'block';
+    document.getElementById('loc-form-wrap').scrollIntoView({ behavior: 'smooth' });
+  }
+  function deleteLoc(id) { if (!confirm('Delete this location?')) return; store.locations = store.locations.filter(x => x.id !== id); save(); renderLocs(); }
+  function renderLocs() {
+    const el = document.getElementById('loc-list');
+    if (!store.locations.length) { el.innerHTML = '<div class="empty-state" style="grid-column:span 2"><i class="ti ti-map-pin"></i><p>No locations yet — click "New location" above</p></div>'; return; }
+    el.innerHTML = store.locations.map(l => `
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-name">${esc(l.name)}</div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick="editLoc('${l.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+            <button class="btn-danger" onclick="deleteLoc('${l.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <p class="item-desc">${l.description ? esc(l.description) : ''}</p>
+        ${l.importance ? `<span class="item-tag"><i class="ti ti-star" style="font-size:10px;vertical-align:-1px"></i> ${esc(l.importance)}</span>` : ''}
+      </div>`).join('');
+  }
+
+  /* ─── ORGANIZATIONS ──────────────────────────── */
+  function clearOrgForm() { editingOrg = null; ['org-name','org-purpose','org-members','org-history'].forEach(id => setVal(id, '')); }
+  function saveOrg() {
+    const n = val('org-name'); if (!n) return alert('Name is required.');
+    const obj = { id: editingOrg || Date.now() + '', name: n, purpose: val('org-purpose'), members: val('org-members'), history: val('org-history') };
+    if (editingOrg) store.organizations = store.organizations.map(o => o.id === editingOrg ? obj : o);
+    else store.organizations.push(obj);
+    save(); clearOrgForm(); document.getElementById('org-form-wrap').style.display = 'none'; renderOrgs();
+  }
+  function editOrg(id) {
+    const o = store.organizations.find(x => x.id === id); if (!o) return;
+    editingOrg = id; setVal('org-name', o.name); setVal('org-purpose', o.purpose); setVal('org-members', o.members); setVal('org-history', o.history);
+    document.getElementById('org-form-wrap').style.display = 'block';
+    document.getElementById('org-form-wrap').scrollIntoView({ behavior: 'smooth' });
+  }
+  function deleteOrg(id) { if (!confirm('Delete this organization?')) return; store.organizations = store.organizations.filter(x => x.id !== id); save(); renderOrgs(); }
+  function renderOrgs() {
+    const el = document.getElementById('org-list');
+    if (!store.organizations.length) { el.innerHTML = '<div class="empty-state" style="grid-column:span 2"><i class="ti ti-building"></i><p>No organizations yet — click "New organization" above</p></div>'; return; }
+    el.innerHTML = store.organizations.map(o => `
+      <div class="item-card">
+        <div class="item-header">
+          <div class="item-name">${esc(o.name)}</div>
+          <div class="item-actions">
+            <button class="btn-icon" onclick="editOrg('${o.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+            <button class="btn-danger" onclick="deleteOrg('${o.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <p class="item-desc">${o.purpose ? esc(o.purpose) : ''}</p>
+        ${o.members ? `<span class="item-tag forest"><i class="ti ti-users" style="font-size:10px;vertical-align:-1px"></i> ${esc(o.members.slice(0,70))}</span>` : ''}
+      </div>`).join('');
+  }
+
+  /* ─── CHAPTERS ───────────────────────────────── */
+  function clearChapForm() { editingChap = null; ['chap-vol','chap-ch','chap-pov','chap-goals','chap-summary'].forEach(id => setVal(id, '')); document.getElementById('chap-form-title').textContent = 'Plan new chapter'; }
+  function saveChap() {
+    const v = val('chap-vol'), c = val('chap-ch');
+    if (!v || !c) return alert('Volume and Chapter are required.');
+    const obj = { id: editingChap || Date.now() + '', volume: v, chapter: c, pov: val('chap-pov'), goals: val('chap-goals'), summary: val('chap-summary') };
+    if (editingChap) store.chapters = store.chapters.map(ch => ch.id === editingChap ? obj : ch);
+    else store.chapters.push(obj);
+    save(); clearChapForm(); document.getElementById('chap-form-wrap').style.display = 'none'; renderChaps();
+  }
+  function editChap(id) {
+    const c = store.chapters.find(x => x.id === id); if (!c) return;
+    editingChap = id; setVal('chap-vol', c.volume); setVal('chap-ch', c.chapter); setVal('chap-pov', c.pov); setVal('chap-goals', c.goals); setVal('chap-summary', c.summary);
+    document.getElementById('chap-form-title').textContent = 'Edit chapter';
+    document.getElementById('chap-form-wrap').style.display = 'block';
+    document.getElementById('chap-form-wrap').scrollIntoView({ behavior: 'smooth' });
+  }
+  function deleteChap(id) { if (!confirm('Delete this chapter?')) return; store.chapters = store.chapters.filter(x => x.id !== id); save(); renderChaps(); }
+  function renderChaps() {
+    const el = document.getElementById('chap-list');
+    if (!store.chapters.length) { el.innerHTML = '<div class="empty-state"><i class="ti ti-list-numbers"></i><p>No chapters planned yet — click "Plan chapter" above</p></div>'; return; }
+    el.innerHTML = store.chapters.map(c => `
+      <div class="chapter-item">
+        <span class="ch-vol">${esc(c.volume)}</span>
+        <span class="ch-badge">${esc(c.chapter)}</span>
+        ${c.pov ? `<span class="ch-pov"><i class="ti ti-user" style="font-size:10px;vertical-align:-1px"></i> ${esc(c.pov)}</span>` : ''}
+        <span class="ch-summary">${c.summary ? esc(c.summary) : (c.goals ? esc(c.goals) : '—')}</span>
+        <div class="item-actions" style="margin-left:auto">
+          <button class="btn-icon" onclick="editChap('${c.id}')" title="Edit"><i class="ti ti-edit"></i></button>
+          <button class="btn-danger" onclick="deleteChap('${c.id}')" title="Delete"><i class="ti ti-trash"></i></button>
+        </div>
+      </div>`).join('');
+  }
+
+  /* ─── WORLD BIBLE ────────────────────────────── */
+  function saveBible() { store.bible = document.getElementById('bible-text').value; save(); updateBibleCount(); }
+  function updateBibleCount() { const w = store.bible ? store.bible.split(/\s+/).filter(Boolean).length : 0; document.getElementById('bible-word-count').textContent = w.toLocaleString() + ' words'; }
+
+  /* ─── CHAT ───────────────────────────────────── */
+  function startChat() {
+    const p = val('chat-prompt'); if (!p) return alert('Enter a persona prompt first.');
+    chatHistory = [{ role: 'system', content: p }];
+    document.getElementById('chat-setup').style.display = 'none';
+    document.getElementById('chat-messages').style.display = 'flex';
+    document.getElementById('chat-input-row').style.display = 'flex';
+    document.getElementById('end-session-btn').style.display = 'inline-flex';
+    const msgsEl = document.getElementById('chat-messages');
+    msgsEl.innerHTML = '';
+    appendMsg('ai', 'Session started. I am ready to speak as the character you described. Ask me anything.');
+  }
+  function endChat() {
+    chatHistory = [];
+    document.getElementById('chat-setup').style.display = 'flex';
+    document.getElementById('chat-messages').style.display = 'none';
+    document.getElementById('chat-input-row').style.display = 'none';
+    document.getElementById('end-session-btn').style.display = 'none';
+  }
+  function appendMsg(role, text) {
+    const msgsEl = document.getElementById('chat-messages');
+    const div = document.createElement('div');
+    div.className = 'msg ' + role;
+    div.innerHTML = `<div class="msg-avatar ${role}"><i class="ti ti-${role === 'user' ? 'user' : 'robot'}"></i></div><div class="msg-bubble">${esc(text)}</div>`;
+    msgsEl.appendChild(div);
+    msgsEl.scrollTop = msgsEl.scrollHeight;
+  }
+  async function sendChatMsg() {
+    const inp = document.getElementById('chat-input'); const msg = inp.value.trim(); if (!msg) return;
+    inp.value = ''; chatHistory.push({ role: 'user', content: msg }); appendMsg('user', msg);
+    const msgsEl = document.getElementById('chat-messages');
+    const dots = document.createElement('div'); dots.className = 'typing-dots'; dots.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>'; msgsEl.appendChild(dots); msgsEl.scrollTop = msgsEl.scrollHeight;
+    const sys = chatHistory.find(m => m.role === 'system');
+    const msgs = chatHistory.filter(m => m.role !== 'system').map(m => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }));
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-allow-browser': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1000, system: sys ? sys.content : '', messages: msgs })
+      });
+      const data = await res.json(); dots.remove();
+      const reply = data.content ? data.content.map(b => b.text || '').join('') : (data.error ? '[Error: ' + data.error.message + ']' : '[No response]');
+      chatHistory.push({ role: 'ai', content: reply }); appendMsg('ai', reply);
+    } catch (e) { dots.remove(); appendMsg('ai', '[Connection error — check your API key in the banner above]'); }
+  }
+
+  /* ─── CONSISTENCY ENGINE ─────────────────────── */
+  async function runCheck() {
+    const text = val('check-text'); if (!text) return alert('Paste a chapter draft first.');
+    const btn = document.getElementById('run-check-btn'); btn.disabled = true;
+    const res = document.getElementById('check-result');
+    res.innerHTML = '<div class="loading-row"><i class="ti ti-brain spin"></i> Analyzing your draft against world data…</div>';
+    const ctx = [
+      store.characters.length ? 'Characters: ' + store.characters.map(c => c.name + ' (' + (c.description || '') + ')').join(', ') : '',
+      store.locations.length ? 'Locations: ' + store.locations.map(l => l.name + ' (' + (l.description || '') + ')').join(', ') : '',
+      store.organizations.length ? 'Organizations: ' + store.organizations.map(o => o.name + ' (' + (o.purpose || '') + ')').join(', ') : '',
+      store.bible ? 'World Bible excerpt: ' + store.bible.slice(0, 600) : ''
+    ].filter(Boolean).join('\n');
+    try {
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': getApiKey(), 'anthropic-version': '2023-06-01', 'anthropic-dangerous-allow-browser': 'true' },
+        body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 1200, messages: [{ role: 'user', content: `You are a narrative consistency engine for a novelist.\n\nWORLD CONTEXT:\n${ctx || 'No world data saved yet.'}\n\nCHAPTER DRAFT:\n${text}\n\nList any plot holes, character inconsistencies, or continuity errors. If none found, say "No major inconsistencies detected." Be concise and specific.` }] })
+      });
+      const data = await r.json();
+      const reply = data.content ? data.content.map(b => b.text || '').join('') : (data.error ? 'Error: ' + data.error.message : 'No response.');
+      res.innerHTML = `<pre>${esc(reply)}</pre>`;
+    } catch (e) { res.innerHTML = '<div class="no-issues" style="color:#A32D2D"><i class="ti ti-alert-circle"></i><p>Analysis failed — check your API key</p></div>'; }
+    btn.disabled = false;
+  }
+
+  /* ─── EXPORT ─────────────────────────────────── */
+  function download(content, filename, type) { const a = document.createElement('a'); a.href = 'data:' + type + ';charset=utf-8,' + encodeURIComponent(content); a.download = filename; a.click(); }
+  function exportJSON() { download(JSON.stringify(store, null, 2), 'novel-os-export.json', 'application/json'); }
+  function exportMD() {
+    const md = store.characters.map(c => `# ${c.name}\n\n**Age:** ${c.age || '—'}\n\n**Description:** ${c.description || '—'}\n\n**Goals:** ${c.goals || '—'}\n\n**Secrets:** ${c.secrets || '—'}\n`).join('\n---\n\n') || '# No characters saved';
+    download(md, 'characters.md', 'text/markdown');
+  }
+  function exportCSV() {
+    const rows = [['Volume', 'Chapter', 'POV', 'Goals', 'Summary'], ...store.chapters.map(c => [c.volume, c.chapter, c.pov, c.goals, c.summary])];
+    download(rows.map(r => r.map(x => '"' + (x || '').replace(/"/g, '""') + '"').join(',')).join('\n'), 'chapters.csv', 'text/csv');
+  }
+
+  /* ─── UTILITIES ──────────────────────────────── */
+  function esc(str) { return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+  function renderAll() { renderChars(); renderLocs(); renderOrgs(); renderChaps(); }
+</script>
+</body>
+</html>
